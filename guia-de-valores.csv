@@ -1,0 +1,27 @@
+columna,valores permitidos,notas
+category,capilares,"Página de Capilares. Puede combinarse con otras separando por coma, ej: capilares,perfumes"
+category,mascarillas,Página de Mascarillas (independiente)
+category,perfumes,Página de Perfumes
+category,ropa,Página de Ropa
+,,
+subcategory,shampoo,Solo aplica si category incluye capilares
+subcategory,acondicionador,Solo aplica si category incluye capilares
+subcategory,termoprotector-tonico-capilar,Solo aplica si category incluye capilares
+subcategory,mascarilla,Solo aplica si category incluye capilares
+subcategory,perfumes,Solo aplica si category incluye capilares
+subcategory,(vacío),Si el producto no necesita filtro dentro de su página
+,,
+active,si,El producto se muestra en el sitio
+active,no,El producto queda oculto (no se borra la fila)
+,,
+stock,si,Disponible - se puede agregar al carrito
+stock,no,Muestra etiqueta 'Agotado' y desactiva el botón Agregar
+stock,(vacío),Se trata como 'si' por defecto
+,,
+sizes,"S,M,L,XL",Ejemplo para ropa - separar por comas
+sizes,"250ml,500ml",Ejemplo para volumen de líquidos - separar por comas
+sizes,(vacío),Si el producto no tiene variantes
+,,
+id,texto único,"Minúsculas, sin espacios ni tildes, palabras separadas con guion. Ej: shampoo-anyeluz-cebolla"
+img,ruta o link de la foto,"Ej: multimedia/productos/capilares/shampoo-anyeluz-cebolla.jpg — debe coincidir exactamente con el archivo subido"
+price,solo número,Sin símbolo de moneda. Ej: 26 o 26.50
