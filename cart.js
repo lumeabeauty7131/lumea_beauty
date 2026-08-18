@@ -2,7 +2,7 @@
    LUMEA BEAUTY — carrito compartido (localStorage) + WhatsApp
    Número de WhatsApp del negocio (formato internacional, sin +)
    ============================================================= */
-const WHATSAPP_NUMBER = "16465381517";
+const WHATSAPP_NUMBER = "19297812767";
 const CART_KEY = "lumea_cart";
 
 function escapeHtml(text) {
