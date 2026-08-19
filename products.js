@@ -4,9 +4,9 @@
 
 // 👉 Pega aquí el link de "Publicar en la web" en formato CSV
 const SHEET_CSV_URL =
-  "https://docs.google.com/spreadsheets/d/e/2PACX-1vTyY-cfIwnpbLeW6HPkx46N6HbI3dp627oD0zxFfIxFfJyHvOsz3_65mQ2H2uYSCEc-3V75yJcrO562/pub?output=csv";
+  "https://script.google.com/macros/s/AKfycbzLcdLfz-rKUekje6GCdjCugjOzjIqqC7LGp7UoOoI2gf53ZAtfjqAluS1IjDM688fS/exec";
 
-let PRODUCTS = { capilares: [], perfumes: [], mascarillas: [], ropa: [], kits: [] };
+let PRODUCTS = { capilares: [], perfumes: [], mascarillas: [], ropa: [], kits: [], };
 let currentFilter = "all";
 let currentSearch = "";
 let currentSort = "default";
@@ -128,7 +128,7 @@ async function loadProducts() {
     const headers = rows[0].map((h) => h.trim().toLowerCase());
     const data = rows.slice(1);
 
-    const grouped = { capilares: [], perfumes: [], mascarillas: [], ropa: [], kits: [] };
+    const grouped = { capilares: [], perfumes: [], mascarillas: [], ropa: [], kits: [], };
     data.forEach((cols) => {
       const obj = {};
       headers.forEach((h, i) => (obj[h] = (cols[i] || "").trim()));
