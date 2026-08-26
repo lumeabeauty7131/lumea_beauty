@@ -324,7 +324,7 @@ function renderCategory(category) {
       const badgeText = isOut ? "Agotado" : isSoon ? "Próximamente" : "";
       const btnText = isOut ? "Agotado" : isSoon ? "Próximamente" : "Agregar";
 
-      const firstImg = p.variants && p.variants[0] ? p.variants[0].img : p.img;
+      const firstImg = p.img || (p.variants && p.variants[0] && p.variants[0].img);
       const safeFirstImg = escapeHtml(firstImg);
 
       return `
@@ -353,6 +353,7 @@ function renderCategory(category) {
           p.variants
             ? `
           <select class="size-select" id="variant-${safeId}" ${isDisabled ? "disabled" : ""} onchange="updateVariantImage('${safeId}')">
+            <option value="" selected>Elige un color/aroma</option>
             ${p.variants.map((s) => `<option value="${escapeHtml(s.name)}">${escapeHtml(s.name)}</option>`).join("")}
           </select>
         `
@@ -369,7 +370,7 @@ function renderCategory(category) {
         }
         <div class="product-foot">
           <span class="price">$${p.price.toFixed(2)}</span>
-          <button class="add-btn" data-id="${safeId}" ${isDisabled ? "disabled" : ""} onclick="addToCart('${safeId}', ${p.sizes ? `document.getElementById('size-${safeId}').value` : "null"}, ${p.variants ? `document.getElementById('variant-${safeId}').value` : "null"})">
+          <button class="add-btn" data-id="${safeId}" ${isDisabled ? "disabled" : ""} onclick="handleAddToCart('${safeId}')">
             ${btnText}
           </button>
         </div>
@@ -381,12 +382,35 @@ function renderCategory(category) {
 }
 
 /* ---------- cambia la imagen del producto al elegir un olor ---------- */
+/* ---------- valida talla/variante elegidas antes de agregar ---------- */
+function handleAddToCart(id) {
+  const p = findProduct(id);
+  if (!p) return;
+
+  const sizeSelect = document.getElementById(`size-${id}`);
+  const variantSelect = document.getElementById(`variant-${id}`);
+  const size = sizeSelect ? sizeSelect.value : null;
+  const variant = variantSelect ? variantSelect.value : null;
+
+  if (variantSelect && !variant) {
+    alert("Por favor elige un color/aroma antes de agregar al carrito.");
+    variantSelect.focus();
+    return;
+  }
+
+  addToCart(id, size || null, variant || null);
+}
+
 function updateVariantImage(id) {
   const p = findProduct(id);
   if (!p || !p.variants) return;
   const select = document.getElementById(`variant-${id}`);
   const img = document.getElementById(`img-${id}`);
   if (!select || !img) return;
+  if (!select.value) {
+    if (p.img) img.src = p.img;
+    return;
+  }
   const variant = p.variants.find((s) => s.name === select.value);
   if (variant && variant.img) img.src = variant.img;
 }
