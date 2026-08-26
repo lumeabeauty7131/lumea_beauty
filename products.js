@@ -4,9 +4,15 @@
 
 // 👉 Pega aquí el link de "Publicar en la web" en formato CSV
 const SHEET_CSV_URL =
-  "https://script.google.com/macros/s/AKfycbzLcdLfz-rKUekje6GCdjCugjOzjIqqC7LGp7UoOoI2gf53ZAtfjqAluS1IjDM688fS/exec";
+  "https://script.google.com/macros/s/AKfycbyQTqHRHForjs8k1Jy1odgKpSuUQDuAVmI9dCQtfTaLK_yrOvZevgerK4Nt5CmqKyVT/exec";
 
-let PRODUCTS = { capilares: [], perfumes: [], mascarillas: [], ropa: [], kits: [], };
+let PRODUCTS = {
+  capilares: [],
+  perfumes: [],
+  mascarillas: [],
+  ropa: [],
+  kits: [],
+};
 let currentFilter = "all";
 let currentSearch = "";
 let currentSort = "default";
@@ -97,6 +103,17 @@ function parseCSV(text) {
   return rows.filter((r) => r.length && r.some((v) => v.trim() !== ""));
 }
 
+/* interpreta la columna "stock" del Sheet:
+   "no"          -> agotado
+   "proximamente" (o "próximamente") -> disponible pronto
+   vacío / "si" / cualquier otra cosa -> disponible */
+function parseStockStatus(raw) {
+  const v = normalizeBrandKey(raw); // ya quita mayúsculas y tildes
+  if (v === "no") return "out";
+  if (v === "proximamente") return "soon";
+  return "in";
+}
+
 /* ---------- estado de carga (loading / error) ---------- */
 function showLoading() {
   const grid = document.getElementById("productGrid");
@@ -128,7 +145,13 @@ async function loadProducts() {
     const headers = rows[0].map((h) => h.trim().toLowerCase());
     const data = rows.slice(1);
 
-    const grouped = { capilares: [], perfumes: [], mascarillas: [], ropa: [], kits: [], };
+    const grouped = {
+      capilares: [],
+      perfumes: [],
+      mascarillas: [],
+      ropa: [],
+      kits: [],
+    };
     data.forEach((cols) => {
       const obj = {};
       headers.forEach((h, i) => (obj[h] = (cols[i] || "").trim()));
@@ -143,7 +166,7 @@ async function loadProducts() {
         img: obj.img || null,
         brand: obj.brand || null,
         subcategory: obj.subcategory || null,
-        inStock: !(obj.stock && obj.stock.toLowerCase() === "no"),
+        stockStatus: parseStockStatus(obj.stock),
         sizes: obj.sizes
           ? obj.sizes
               .split(",")
@@ -285,15 +308,22 @@ function renderCategory(category) {
       const logo = brandLogo(p.brand);
       const safeBrand = escapeHtml(p.brand);
 
+      const isOut = p.stockStatus === "out";
+      const isSoon = p.stockStatus === "soon";
+      const isDisabled = isOut || isSoon;
+      const cardClass = isOut ? " out-of-stock" : isSoon ? " coming-soon" : "";
+      const badgeText = isOut ? "Agotado" : isSoon ? "Próximamente" : "";
+      const btnText = isOut ? "Agotado" : isSoon ? "Próximamente" : "Agregar";
+
       return `
-    <article class="product-card${p.inStock ? "" : " out-of-stock"}">
+    <article class="product-card${cardClass}">
       <div class="product-media" ${p.img ? `onclick="openLightbox('${safeImg}','${safeName.replace(/'/g, "\\'")}')"` : ""}>
         ${
           p.img
             ? `<img src="${safeImg}" alt="${safeName}" loading="lazy">`
             : `<span class="initial">${safeName.charAt(0)}</span>`
         }
-        ${!p.inStock ? `<span class="stock-badge">Agotado</span>` : ""}
+        ${badgeText ? `<span class="stock-badge${isSoon ? " stock-badge-soon" : ""}">${badgeText}</span>` : ""}
         ${
           logo
             ? `<span class="brand-badge" title="${safeBrand}"><img src="${logo}" alt="${safeBrand}"></span>`
@@ -310,7 +340,7 @@ function renderCategory(category) {
         ${
           p.sizes
             ? `
-          <select class="size-select" id="size-${safeId}" ${!p.inStock ? "disabled" : ""}>
+          <select class="size-select" id="size-${safeId}" ${isDisabled ? "disabled" : ""}>
             ${p.sizes.map((s) => `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join("")}
           </select>
         `
@@ -318,8 +348,8 @@ function renderCategory(category) {
         }
         <div class="product-foot">
           <span class="price">$${p.price.toFixed(2)}</span>
-          <button class="add-btn" data-id="${safeId}" ${!p.inStock ? "disabled" : ""} onclick="addToCart('${safeId}', ${p.sizes ? `document.getElementById('size-${safeId}').value` : "null"})">
-            ${p.inStock ? "Agregar" : "Agotado"}
+          <button class="add-btn" data-id="${safeId}" ${isDisabled ? "disabled" : ""} onclick="addToCart('${safeId}', ${p.sizes ? `document.getElementById('size-${safeId}').value` : "null"})">
+            ${btnText}
           </button>
         </div>
       </div>
