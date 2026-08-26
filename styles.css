@@ -546,6 +546,16 @@ p {
 .product-card.out-of-stock .product-body {
   opacity: 0.6;
 }
+.stock-badge-soon {
+  background: var(--gold);
+  color: var(--white);
+}
+.product-card.coming-soon .product-media {
+  opacity: 0.85;
+}
+.product-card.coming-soon .product-body {
+  opacity: 0.75;
+}
 .add-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
