@@ -173,6 +173,15 @@ async function loadProducts() {
               .map((s) => s.trim())
               .filter(Boolean)
           : null,
+        variants: obj.variants
+          ? obj.variants
+              .split("|")
+              .map((s) => {
+                const [name, img] = s.split(":").map((x) => x.trim());
+                return name ? { name, img: img || obj.img || null } : null;
+              })
+              .filter(Boolean)
+          : null,
       };
       const categories = obj.category
         .split(",")
@@ -315,12 +324,15 @@ function renderCategory(category) {
       const badgeText = isOut ? "Agotado" : isSoon ? "Próximamente" : "";
       const btnText = isOut ? "Agotado" : isSoon ? "Próximamente" : "Agregar";
 
+      const firstImg = p.variants && p.variants[0] ? p.variants[0].img : p.img;
+      const safeFirstImg = escapeHtml(firstImg);
+
       return `
     <article class="product-card${cardClass}">
-      <div class="product-media" ${p.img ? `onclick="openLightbox('${safeImg}','${safeName.replace(/'/g, "\\'")}')"` : ""}>
+      <div class="product-media" ${firstImg ? `onclick="openLightbox(document.getElementById('img-${safeId}').src,'${safeName.replace(/'/g, "\\'")}')"` : ""}>
         ${
-          p.img
-            ? `<img src="${safeImg}" alt="${safeName}" loading="lazy">`
+          firstImg
+            ? `<img id="img-${safeId}" src="${safeFirstImg}" alt="${safeName}" loading="lazy">`
             : `<span class="initial">${safeName.charAt(0)}</span>`
         }
         ${badgeText ? `<span class="stock-badge${isSoon ? " stock-badge-soon" : ""}">${badgeText}</span>` : ""}
@@ -338,6 +350,15 @@ function renderCategory(category) {
         <h3>${safeName}</h3>
         <p class="desc">${safeDesc}</p>
         ${
+          p.variants
+            ? `
+          <select class="size-select" id="variant-${safeId}" ${isDisabled ? "disabled" : ""} onchange="updateVariantImage('${safeId}')">
+            ${p.variants.map((s) => `<option value="${escapeHtml(s.name)}">${escapeHtml(s.name)}</option>`).join("")}
+          </select>
+        `
+            : ""
+        }
+        ${
           p.sizes
             ? `
           <select class="size-select" id="size-${safeId}" ${isDisabled ? "disabled" : ""}>
@@ -348,7 +369,7 @@ function renderCategory(category) {
         }
         <div class="product-foot">
           <span class="price">$${p.price.toFixed(2)}</span>
-          <button class="add-btn" data-id="${safeId}" ${isDisabled ? "disabled" : ""} onclick="addToCart('${safeId}', ${p.sizes ? `document.getElementById('size-${safeId}').value` : "null"})">
+          <button class="add-btn" data-id="${safeId}" ${isDisabled ? "disabled" : ""} onclick="addToCart('${safeId}', ${p.sizes ? `document.getElementById('size-${safeId}').value` : "null"}, ${p.variants ? `document.getElementById('variant-${safeId}').value` : "null"})">
             ${btnText}
           </button>
         </div>
@@ -357,6 +378,17 @@ function renderCategory(category) {
   `;
     })
     .join("");
+}
+
+/* ---------- cambia la imagen del producto al elegir un olor ---------- */
+function updateVariantImage(id) {
+  const p = findProduct(id);
+  if (!p || !p.variants) return;
+  const select = document.getElementById(`variant-${id}`);
+  const img = document.getElementById(`img-${id}`);
+  if (!select || !img) return;
+  const variant = p.variants.find((s) => s.name === select.value);
+  if (variant && variant.img) img.src = variant.img;
 }
 
 function renderSubcategoryFilters(category) {
