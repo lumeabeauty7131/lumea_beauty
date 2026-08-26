@@ -33,12 +33,12 @@ function findProduct(id) {
   }
   return null;
 }
-function addToCart(id, size = null) {
+function addToCart(id, size = null, variant = null) {
   const cart = getCart();
-  const lineId = size ? `${id}__${size}` : id;
+  const lineId = [id, size, variant].filter(Boolean).join("__");
   const line = cart.find((l) => l.lineId === lineId);
   if (line) line.qty += 1;
-  else cart.push({ id, size, lineId, qty: 1 });
+  else cart.push({ id, size, variant, lineId, qty: 1 });
   saveCart(cart);
   flashAdded(id);
   openCart();
@@ -119,14 +119,19 @@ function renderCart() {
         if (!p) return "";
         const lineId = l.lineId || l.id;
         const safeName = escapeHtml(p.name);
-        const safeSize = escapeHtml(l.size);
+        const variantImg =
+          l.variant && p.variants
+            ? (p.variants.find((s) => s.name === l.variant) || {}).img
+            : null;
+        const lineImg = variantImg || p.img;
+        const variantLabel = [l.size, l.variant].filter(Boolean).join(" · ");
         return `
         <div class="cart-line">
           <div class="line-media">
-          ${p.img ? `<img src="${escapeHtml(p.img)}" alt="${safeName}">` : `<span>${safeName.charAt(0)}</span>`}
+          ${lineImg ? `<img src="${escapeHtml(lineImg)}" alt="${safeName}">` : `<span>${safeName.charAt(0)}</span>`}
         </div>
           <div class="line-info">
-            <h5>${safeName}${l.size ? ` <span class="line-size">${safeSize}</span>` : ""}</h5>
+            <h5>${safeName}${variantLabel ? ` <span class="line-size">${escapeHtml(variantLabel)}</span>` : ""}</h5>
             <div class="line-qty">
               <button class="qty-btn" aria-label="Restar" onclick="changeQty('${lineId}',-1)">−</button>
               <span>${l.qty}</span>
@@ -164,8 +169,8 @@ function sendCartToWhatsApp() {
   cart.forEach((l) => {
     const p = findProduct(l.id);
     if (!p) return;
-    const sizeText = l.size ? ` (${l.size})` : "";
-    msg += `• ${p.name}${sizeText} x${l.qty} — $${(p.price * l.qty).toFixed(2)}\n`;
+    const variantText = [l.size, l.variant].filter(Boolean).join(" · ");
+    msg += `• ${p.name}${variantText ? ` (${variantText})` : ""} x${l.qty} — $${(p.price * l.qty).toFixed(2)}\n`;
   });
   msg += `\nTotal: $${cartTotal(cart).toFixed(2)}\n\n`;
   msg +=
